@@ -5,9 +5,11 @@ namespace HighwayTollsystem.Services
     public class TollService
     {
         private readonly HighwayTollContext _db;
-        public TollService(HighwayTollContext db)
+        private readonly VignetteService _vignetteService;
+        public TollService(HighwayTollContext db, VignetteService vignetteService)
         {
             _db = db;
+            _vignetteService = vignetteService;
         }
 
         public async Task PassageProcessingAsync(Passage passage)
@@ -18,12 +20,22 @@ namespace HighwayTollsystem.Services
                 return;
             }
             CalculateRoadFee(passage, vehicle);
+            passage.IsVignetteValid = await _vignetteService.IsVignetteValidAsync(vehicle, passage.Timestamp);
 
+            
+            _db.Passages.Add(passage);
+            await _db.SaveChangesAsync();
+            if (!passage.IsVignetteValid)
+            {
+                await CreateMissingVignetteViolationAsync(passage);
+            }
+
+            await CheckViolations(passage);
 
 
         }
 
-        public async Task CalculateRoadFee(Passage passage, Vehicle vehicle)
+        public void CalculateRoadFee(Passage passage, Vehicle vehicle)
         {
             passage.CalculatedFee = vehicle.Type.BaseTarif ?? 0.0m;
         }
@@ -53,6 +65,25 @@ namespace HighwayTollsystem.Services
                     ActualPenaltyAmount = violationType.DefaultPenaltyAmount
                 };
 
+                _db.TrafficViolations.Add(violation);
+                await _db.SaveChangesAsync();
+            }
+        }
+
+        private async Task CreateMissingVignetteViolationAsync(Passage passage)
+        {
+            var violationType = await _db.ViolationTypes
+                .FirstOrDefaultAsync(v => v.Code == "MISSING_VIGNETTE");
+
+            if (violationType != null)
+            {
+                var violation = new TrafficViolation
+                {
+                    PassageId = passage.PassageId,
+                    ViolationTypeId = violationType.ViolationTypeId,
+                    Details = "Vehicle is missing a valid vignette.",
+                    ActualPenaltyAmount = violationType.DefaultPenaltyAmount
+                };
                 _db.TrafficViolations.Add(violation);
                 await _db.SaveChangesAsync();
             }
