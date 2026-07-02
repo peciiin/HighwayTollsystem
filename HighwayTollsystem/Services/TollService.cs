@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 namespace HighwayTollsystem.Services
 {
-    public class TollService
+    public class TollService : ITollService
     {
         private readonly HighwayTollContext _db;
         private readonly VignetteService _vignetteService;
@@ -14,6 +14,7 @@ namespace HighwayTollsystem.Services
 
         public async Task PassageProcessingAsync(Passage passage)
         {
+
             var vehicle = await _db.Vehicles.Include(t => t.Type).FirstOrDefaultAsync(x => x.Spz == passage.Spz);
             if (vehicle == null)
             {
@@ -22,14 +23,12 @@ namespace HighwayTollsystem.Services
             CalculateRoadFee(passage, vehicle);
             passage.IsVignetteValid = await _vignetteService.IsVignetteValidAsync(vehicle, passage.Timestamp);
 
-            
             _db.Passages.Add(passage);
             await _db.SaveChangesAsync();
             if (!passage.IsVignetteValid)
             {
                 await CreateMissingVignetteViolationAsync(passage);
             }
-
             await CheckViolations(passage);
 
 
@@ -47,9 +46,9 @@ namespace HighwayTollsystem.Services
 
             string code = speed switch
             {
-                < 20 => "SPEED LOW",
-                < 50 => "SPEED MEDIUM",
-                _ => "SPEED HIGH"
+                < 20 => "SPEED_LOW",
+                < 50 => "SPEED_MEDIUM",
+                _ => "SPEED_HIGH"
             };
 
             var violationType = await _db.ViolationTypes
