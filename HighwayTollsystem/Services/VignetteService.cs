@@ -1,4 +1,5 @@
 ﻿using HighwayTollsystem.Models;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -14,21 +15,15 @@ namespace HighwayTollsystem.Services
             _db = db;
         }
 
-        public async Task<bool> IsVignetteValidAsync(Vehicle vehicle, DateTime passageTime)
+        public async Task<bool> CheckVignetteAsync(Vehicle vehicle, DateTime passGateTime)
         {
-            
             if (vehicle.Type.TypeName == "TRUCK")
             {
                 return true;
             }
 
-            
-            var activeVignette = await _db.Vignettes
-                .FirstOrDefaultAsync(v => v.Spz == vehicle.Spz &&
-                                          v.ValidFrom <= passageTime &&
-                                          v.ValidTo >= passageTime);
-
-            return activeVignette != null;
+            var validVignette = await _db.Vignettes.FirstOrDefaultAsync(x => x.Spz == vehicle.Spz && x.ValidFrom <= passGateTime && x.ValidTo >= passGateTime);
+            return validVignette != null;
         }
     }
 }

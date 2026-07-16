@@ -2,14 +2,18 @@
 using Microsoft.EntityFrameworkCore;
 namespace HighwayTollsystem.Services
 {
-    public class TollService : ITollService
+    public class TollService
     {
         private readonly HighwayTollContext _db;
         private readonly VignetteService _vignetteService;
-        public TollService(HighwayTollContext db, VignetteService vignetteService)
+        private readonly SpeedService _speedService;
+        private readonly StkService _stkService;
+        public TollService(HighwayTollContext db, VignetteService vignetteService, SpeedService speedService, StkService stkService)
         {
             _db = db;
             _vignetteService = vignetteService;
+            _speedService = speedService;
+            _stkService = stkService;
         }
 
         public async Task PassageProcessingAsync(Passage passage)
@@ -18,55 +22,13 @@ namespace HighwayTollsystem.Services
             var vehicle = await _db.Vehicles.Include(t => t.Type).FirstOrDefaultAsync(x => x.Spz == passage.Spz);
             if (vehicle == null)
             {
-                return;
+                
             }
-            CalculateRoadFee(passage, vehicle);
-            passage.IsVignetteValid = await _vignetteService.IsVignetteValidAsync(vehicle, passage.Timestamp);
-
-            _db.Passages.Add(passage);
-            await _db.SaveChangesAsync();
-            if (!passage.IsVignetteValid)
-            {
-                await CreateMissingVignetteViolationAsync(passage);
-            }
-            await CheckViolations(passage);
 
 
-        }
 
-        public void CalculateRoadFee(Passage passage, Vehicle vehicle)
-        {
-            passage.CalculatedFee = vehicle.Type.BaseTarif ?? 0.0m;
-        }
 
-        private async Task CheckViolations(Passage passage)
-        {
-            int speed = passage.VehicleSpeed - 130;
-            if (speed <= 0) return;
-
-            string code = speed switch
-            {
-                < 20 => "SPEED_LOW",
-                < 50 => "SPEED_MEDIUM",
-                _ => "SPEED_HIGH"
-            };
-
-            var violationType = await _db.ViolationTypes
-                .FirstOrDefaultAsync(v => v.Code == code);
-
-            if (violationType != null)
-            {
-                var violation = new TrafficViolation
-                {
-                    PassageId = passage.PassageId,
-                    ViolationTypeId = violationType.ViolationTypeId,
-                    Details = "Maximum speed: 130, violation: " + speed + " km/h",
-                    ActualPenaltyAmount = violationType.DefaultPenaltyAmount
-                };
-
-                _db.TrafficViolations.Add(violation);
-                await _db.SaveChangesAsync();
-            }
+            
         }
 
         private async Task CreateMissingVignetteViolationAsync(Passage passage)
