@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using HighwayTollsystem.Models;
+﻿using HighwayTollsystem.Models;
 using HighwayTollsystem.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace HighwayTollsystem.Controllers
 {
@@ -8,22 +8,47 @@ namespace HighwayTollsystem.Controllers
     [Route("api/[controller]")]
     public class TollController : ControllerBase
     {
-        public readonly ITollService _talService;
-        public TollController(ITollService tollService) 
+        private readonly TollService _tollService;
+
+        public TollController(TollService tollService)
         {
-            _talService = tollService;
+            _tollService = tollService;
         }
 
+        // POST: api/toll/passage
         [HttpPost("passage")]
-        public async Task<IActionResult> RegisterPassage([FromBody] Passage passage)
+        public async Task<IActionResult> SimulatePassage([FromBody] PassageSimulateDto dto)
         {
-            if (passage == null)
+            var passage = new Passage
             {
-                return BadRequest("wrong data");
+                Spz = dto.Spz.ToUpper(),
+                GateId = dto.GateId,
+                Timestamp = dto.Timestamp ?? DateTime.Now,
+                VehicleSpeed = dto.VehicleSpeed
+            };
 
+            try
+            {
+                await _tollService.PassageProcessingAsync(passage);
+
+                return Ok(new
+                {
+                    message = "Passage successfully processed and checked by the toll system.",
+                    analyzedPassage = passage
+                });
             }
-            await _talService.PassageProcessingAsync(passage);
-            return Ok(new { message = "Sucesfull." });
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred while processing the toll: {ex.Message}");
+            }
         }
+    }
+
+    public class PassageSimulateDto
+    {
+        public string Spz { get; set; } = null!;
+        public int GateId { get; set; }
+        public int VehicleSpeed { get; set; }
+        public DateTime? Timestamp { get; set; }
     }
 }

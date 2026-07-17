@@ -10,7 +10,9 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddScoped<HighwayTollsystem.Services.ITollService, HighwayTollsystem.Services.TollService>();
+builder.Services.AddScoped<HighwayTollsystem.Services.TollService>();
+builder.Services.AddScoped<HighwayTollsystem.Services.StkService>();
+builder.Services.AddScoped<HighwayTollsystem.Services.SpeedService>();
 builder.Services.AddScoped<HighwayTollsystem.Services.VignetteService>();
 
 var app = builder.Build();
