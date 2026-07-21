@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 namespace HighwayTollsystem.Services
 {
     public class TollService
-    {
+    { //fix
         private readonly HighwayTollContext _db;
         private readonly VignetteService _vignetteService;
         private readonly SpeedService _speedService;
