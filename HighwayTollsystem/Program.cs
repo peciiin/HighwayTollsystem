@@ -14,6 +14,7 @@ builder.Services.AddScoped<HighwayTollsystem.Services.TollService>();
 builder.Services.AddScoped<HighwayTollsystem.Services.StkService>();
 builder.Services.AddScoped<HighwayTollsystem.Services.SpeedService>();
 builder.Services.AddScoped<HighwayTollsystem.Services.VignetteService>();
+builder.Services.AddScoped<HighwayTollsystem.Services.AnalyticsService>();
 
 var app = builder.Build();
 
