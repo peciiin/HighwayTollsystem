@@ -10,7 +10,7 @@ namespace HighwayTollsystem.Services
         {
             _db = db;
         }
-        // stk
+        // stk and emission
         public async Task<bool> IsStkValidAsync(Vehicle vehicle, DateTime passageTime)
         {
             var latestStk = await _db.Stks
@@ -25,7 +25,6 @@ namespace HighwayTollsystem.Services
             return latestStk.ValidTo >= passageTime;
         }
 
-        // emission
         public async Task<bool> IsEmisionValidAsync(Vehicle vehicle, DateTime passageTime)
         {
             var latestStk = await _db.Stks

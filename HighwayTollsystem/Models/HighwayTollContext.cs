@@ -32,8 +32,9 @@ public partial class HighwayTollContext : DbContext
     public virtual DbSet<ViolationType> ViolationTypes { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=localhost\\SQLEXPRESS01;Database=HighwayTollSystem;Trusted_Connection=True;TrustServerCertificate=True;");
+    {
+
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -45,9 +46,7 @@ public partial class HighwayTollContext : DbContext
 
             entity.Property(e => e.CalculatedFee).HasColumnType("decimal(10, 2)");
             entity.Property(e => e.Spz)
-                .HasMaxLength(20)
-                .IsUnicode(false);
-            entity.Property(e => e.Timestamp).HasColumnType("datetime");
+                .HasMaxLength(20);
 
             entity.HasOne(d => d.Gate).WithMany(p => p.Passages)
                 .HasForeignKey(d => d.GateId)
@@ -69,13 +68,9 @@ public partial class HighwayTollContext : DbContext
             entity.HasIndex(e => e.Spz, "IX_Stk_Spz");
 
             entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-            entity.Property(e => e.EmissionsValidTo).HasColumnType("datetime");
+                .HasDefaultValueSql("NOW()");
             entity.Property(e => e.Spz)
-                .HasMaxLength(20)
-                .IsUnicode(false);
-            entity.Property(e => e.ValidTo).HasColumnType("datetime");
+                .HasMaxLength(20);
 
             entity.HasOne(d => d.SpzNavigation).WithMany(p => p.Stks)
                 .HasForeignKey(d => d.Spz)
@@ -88,13 +83,11 @@ public partial class HighwayTollContext : DbContext
             entity.HasKey(e => e.GateId).HasName("PK__TollGate__9582C65039CBB277");
 
             entity.Property(e => e.Direction)
-                .HasMaxLength(50)
-                .IsUnicode(false);
+                .HasMaxLength(50);
             entity.Property(e => e.GpsLatitude).HasColumnType("decimal(9, 6)");
             entity.Property(e => e.GpsLongitude).HasColumnType("decimal(9, 6)");
             entity.Property(e => e.HighwayName)
-                .HasMaxLength(10)
-                .IsUnicode(false);
+                .HasMaxLength(10);
             entity.Property(e => e.KilometerPost).HasColumnType("decimal(5, 2)");
         });
 
@@ -104,8 +97,7 @@ public partial class HighwayTollContext : DbContext
 
             entity.Property(e => e.ActualPenaltyAmount).HasColumnType("decimal(10, 2)");
             entity.Property(e => e.Details)
-                .HasMaxLength(255)
-                .IsUnicode(false);
+                .HasMaxLength(255);
 
             entity.HasOne(d => d.Passage).WithMany(p => p.TrafficViolations)
                 .HasForeignKey(d => d.PassageId)
@@ -123,14 +115,11 @@ public partial class HighwayTollContext : DbContext
             entity.HasKey(e => e.Spz).HasName("PK__Vehicles__CA1E142DEAD30959");
 
             entity.Property(e => e.Spz)
-                .HasMaxLength(20)
-                .IsUnicode(false);
+                .HasMaxLength(20);
             entity.Property(e => e.EmissionClass)
-                .HasMaxLength(10)
-                .IsUnicode(false);
+                .HasMaxLength(10);
             entity.Property(e => e.RegisteredAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
+                .HasDefaultValueSql("NOW()");
 
             entity.HasOne(d => d.Type).WithMany(p => p.Vehicles)
                 .HasForeignKey(d => d.TypeId)
@@ -144,8 +133,7 @@ public partial class HighwayTollContext : DbContext
 
             entity.Property(e => e.BaseTarif).HasColumnType("decimal(10, 2)");
             entity.Property(e => e.TypeName)
-                .HasMaxLength(20)
-                .IsUnicode(false);
+                .HasMaxLength(20);
         });
 
         modelBuilder.Entity<Vignette>(entity =>
@@ -155,13 +143,9 @@ public partial class HighwayTollContext : DbContext
             entity.HasIndex(e => new { e.Spz, e.ValidFrom, e.ValidTo }, "IX_Vignettes_Spz_Dates");
 
             entity.Property(e => e.PurchaseDate)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
+                .HasDefaultValueSql("NOW()");
             entity.Property(e => e.Spz)
-                .HasMaxLength(20)
-                .IsUnicode(false);
-            entity.Property(e => e.ValidFrom).HasColumnType("datetime");
-            entity.Property(e => e.ValidTo).HasColumnType("datetime");
+                .HasMaxLength(20);
 
             entity.HasOne(d => d.SpzNavigation).WithMany(p => p.Vignettes)
                 .HasForeignKey(d => d.Spz)
@@ -176,12 +160,10 @@ public partial class HighwayTollContext : DbContext
             entity.HasIndex(e => e.Code, "UQ__Violatio__A25C5AA7571436D1").IsUnique();
 
             entity.Property(e => e.Code)
-                .HasMaxLength(50)
-                .IsUnicode(false);
+                .HasMaxLength(50);
             entity.Property(e => e.DefaultPenaltyAmount).HasColumnType("decimal(10, 2)");
             entity.Property(e => e.Description)
-                .HasMaxLength(255)
-                .IsUnicode(false);
+                .HasMaxLength(255);
         });
 
         OnModelCreatingPartial(modelBuilder);
