@@ -17,12 +17,15 @@ namespace HighwayTollsystem.Services
 
         public async Task<bool> CheckVignetteAsync(Vehicle vehicle, DateTime passGateTime)
         {
-            if (vehicle.Type.TypeName == "TRUCK")
+            if (vehicle.Type?.TypeName == "TRUCK")
             {
                 return true;
             }
 
-            var validVignette = await _db.Vignettes.FirstOrDefaultAsync(x => x.Spz == vehicle.Spz && x.ValidFrom <= passGateTime && x.ValidTo >= passGateTime);
+            var validVignette = await _db.Vignettes
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Spz == vehicle.Spz && x.ValidFrom <= passGateTime && x.ValidTo >= passGateTime);
+
             return validVignette != null;
         }
     }
