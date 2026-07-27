@@ -14,7 +14,7 @@ namespace HighwayTollsystem.Services
         {
             _db = db;
         }
-
+        // test
         public async Task<bool> CheckVignetteAsync(Vehicle vehicle, DateTime passGateTime)
         {
             if (vehicle.Type?.TypeName == "TRUCK")
