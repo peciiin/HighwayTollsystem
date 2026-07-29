@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using HighwayTollsystem.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace HighwayTollsystem.Models;
@@ -15,155 +14,100 @@ public partial class HighwayTollContext : DbContext
     {
     }
 
-    public virtual DbSet<Passage> Passages { get; set; }
-
-    public virtual DbSet<Stk> Stks { get; set; }
-
-    public virtual DbSet<TollGate> TollGates { get; set; }
-
-    public virtual DbSet<TrafficViolation> TrafficViolations { get; set; }
-
-    public virtual DbSet<Vehicle> Vehicles { get; set; }
-
-    public virtual DbSet<VehicleType> VehicleTypes { get; set; }
-
-    public virtual DbSet<Vignette> Vignettes { get; set; }
-
-    public virtual DbSet<ViolationType> ViolationTypes { get; set; }
+    public virtual DbSet<Vehicle> Vehicles { get; set; } = null!;
+    public virtual DbSet<Passage> Passages { get; set; } = null!;
+    public virtual DbSet<TollGate> TollGates { get; set; } = null!;
+    public virtual DbSet<VehicleInspection> VehicleInspections { get; set; } = null!;
+    public virtual DbSet<Vignette> Vignettes { get; set; } = null!;
+    public virtual DbSet<TrafficViolation> TrafficViolations { get; set; } = null!;
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Passage>(entity =>
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Vehicle>(entity =>
         {
-            entity.HasKey(e => e.PassageId).HasName("PK__Passages__CC0F002C4A8A415B");
+            entity.HasKey(e => e.VehicleId);
 
-            entity.HasIndex(e => e.Spz, "IX_Passages_Spz");
+            // Unikátní složený index na SPZ + Zemi registrace
+            entity.HasIndex(e => new { e.Spz, e.CountryCode }).IsUnique();
 
-            entity.Property(e => e.CalculatedFee).HasColumnType("decimal(10, 2)");
-            entity.Property(e => e.Spz)
-                .HasMaxLength(20);
-
-            entity.HasOne(d => d.Gate).WithMany(p => p.Passages)
-                .HasForeignKey(d => d.GateId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Passages__GateId__6D0D32F4");
-
-            entity.HasOne(d => d.SpzNavigation).WithMany(p => p.Passages)
-                .HasForeignKey(d => d.Spz)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Passages__Spz__6C190EBB");
+            entity.Property(e => e.Spz).HasMaxLength(20);
+            entity.Property(e => e.CountryCode).HasMaxLength(10).HasDefaultValue("CZ");
+            entity.Property(e => e.Vin).HasMaxLength(17);
+            entity.Property(e => e.RegisteredAt).HasDefaultValueSql("NOW()");
         });
 
-        modelBuilder.Entity<Stk>(entity =>
+        modelBuilder.Entity<Passage>(entity =>
         {
-            entity.HasKey(e => e.StkId).HasName("PK__Stk__56A80AECC8856588");
+            entity.HasKey(e => e.PassageId);
 
-            entity.ToTable("Stk");
+            entity.Property(e => e.CalculatedFee).HasColumnType("decimal(10, 2)");
+            entity.Property(e => e.Timestamp).HasDefaultValueSql("NOW()");
 
-            entity.HasIndex(e => e.Spz, "IX_Stk_Spz");
+            entity.HasOne(d => d.Vehicle)
+                .WithMany(p => p.Passages)
+                .HasForeignKey(d => d.VehicleId)
+                .OnDelete(DeleteBehavior.Restrict);
 
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("NOW()");
-            entity.Property(e => e.Spz)
-                .HasMaxLength(20);
-
-            entity.HasOne(d => d.SpzNavigation).WithMany(p => p.Stks)
-                .HasForeignKey(d => d.Spz)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Stk__Spz__693CA210");
+            entity.HasOne(d => d.Gate)
+                .WithMany(p => p.Passages)
+                .HasForeignKey(d => d.GateId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<TollGate>(entity =>
         {
-            entity.HasKey(e => e.GateId).HasName("PK__TollGate__9582C65039CBB277");
+            entity.HasKey(e => e.GateId);
 
-            entity.Property(e => e.Direction)
-                .HasMaxLength(50);
+            entity.Property(e => e.HighwayName).HasMaxLength(20);
+            entity.Property(e => e.Direction).HasMaxLength(50);
+            entity.Property(e => e.KilometerPost).HasColumnType("decimal(6, 2)");
             entity.Property(e => e.GpsLatitude).HasColumnType("decimal(9, 6)");
             entity.Property(e => e.GpsLongitude).HasColumnType("decimal(9, 6)");
-            entity.Property(e => e.HighwayName)
-                .HasMaxLength(10);
-            entity.Property(e => e.KilometerPost).HasColumnType("decimal(5, 2)");
         });
 
-        modelBuilder.Entity<TrafficViolation>(entity =>
+        modelBuilder.Entity<VehicleInspection>(entity =>
         {
-            entity.HasKey(e => e.ViolationId).HasName("PK__TrafficV__18B6DC086635FFDB");
+            entity.HasKey(e => e.VehicleInspectionId);
 
-            entity.Property(e => e.ActualPenaltyAmount).HasColumnType("decimal(10, 2)");
-            entity.Property(e => e.Details)
-                .HasMaxLength(255);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("NOW()");
 
-            entity.HasOne(d => d.Passage).WithMany(p => p.TrafficViolations)
-                .HasForeignKey(d => d.PassageId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__TrafficVi__Passa__72C60C4A");
-
-            entity.HasOne(d => d.ViolationType).WithMany(p => p.TrafficViolations)
-                .HasForeignKey(d => d.ViolationTypeId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__TrafficVi__Viola__73BA3083");
-        });
-
-        modelBuilder.Entity<Vehicle>(entity =>
-        {
-            entity.HasKey(e => e.Spz).HasName("PK__Vehicles__CA1E142DEAD30959");
-
-            entity.Property(e => e.Spz)
-                .HasMaxLength(20);
-            entity.Property(e => e.EmissionClass)
-                .HasMaxLength(10);
-            entity.Property(e => e.RegisteredAt)
-                .HasDefaultValueSql("NOW()");
-
-            entity.HasOne(d => d.Type).WithMany(p => p.Vehicles)
-                .HasForeignKey(d => d.TypeId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Vehicles__TypeId__5FB337D6");
-        });
-
-        modelBuilder.Entity<VehicleType>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__VehicleT__3214EC0735D28DED");
-
-            entity.Property(e => e.BaseTarif).HasColumnType("decimal(10, 2)");
-            entity.Property(e => e.TypeName)
-                .HasMaxLength(20);
+            entity.HasOne(d => d.Vehicle)
+                .WithMany(p => p.VehicleInspections)
+                .HasForeignKey(d => d.VehicleId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Vignette>(entity =>
         {
-            entity.HasKey(e => e.VignetteId).HasName("PK__Vignette__C81AEC1FA0C45C6E");
+            entity.HasKey(e => e.VignetteId);
 
-            entity.HasIndex(e => new { e.Spz, e.ValidFrom, e.ValidTo }, "IX_Vignettes_Spz_Dates");
+            entity.HasIndex(e => new { e.VehicleId, e.ValidFrom, e.ValidTo });
 
-            entity.Property(e => e.PurchaseDate)
-                .HasDefaultValueSql("NOW()");
-            entity.Property(e => e.Spz)
-                .HasMaxLength(20);
+            entity.Property(e => e.PurchaseDate).HasDefaultValueSql("NOW()");
 
-            entity.HasOne(d => d.SpzNavigation).WithMany(p => p.Vignettes)
-                .HasForeignKey(d => d.Spz)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Vignettes__Spz__656C112C");
+            entity.HasOne(d => d.Vehicle)
+                .WithMany(p => p.Vignettes)
+                .HasForeignKey(d => d.VehicleId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
-        modelBuilder.Entity<ViolationType>(entity =>
+        modelBuilder.Entity<TrafficViolation>(entity =>
         {
-            entity.HasKey(e => e.ViolationTypeId).HasName("PK__Violatio__3B1A4D1D71E82FAB");
+            entity.HasKey(e => e.ViolationId);
 
-            entity.HasIndex(e => e.Code, "UQ__Violatio__A25C5AA7571436D1").IsUnique();
+            entity.Property(e => e.ActualPenaltyAmount).HasColumnType("decimal(10, 2)");
+            entity.Property(e => e.Details).HasMaxLength(255);
 
-            entity.Property(e => e.Code)
-                .HasMaxLength(50);
-            entity.Property(e => e.DefaultPenaltyAmount).HasColumnType("decimal(10, 2)");
-            entity.Property(e => e.Description)
-                .HasMaxLength(255);
+            entity.HasOne(d => d.Passage)
+                .WithMany(p => p.TrafficViolations)
+                .HasForeignKey(d => d.PassageId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         OnModelCreatingPartial(modelBuilder);

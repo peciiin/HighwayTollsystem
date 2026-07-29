@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HighwayTollsystem.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialPostgres : Migration
+    public partial class DBRebuild : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -18,63 +18,34 @@ namespace HighwayTollsystem.Migrations
                 {
                     GateId = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    HighwayName = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
-                    KilometerPost = table.Column<decimal>(type: "numeric(5,2)", nullable: false),
+                    HighwayName = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    KilometerPost = table.Column<decimal>(type: "numeric(6,2)", nullable: false),
                     Direction = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     GpsLatitude = table.Column<decimal>(type: "numeric(9,6)", nullable: false),
                     GpsLongitude = table.Column<decimal>(type: "numeric(9,6)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__TollGate__9582C65039CBB277", x => x.GateId);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "VehicleTypes",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    TypeName = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
-                    BaseTarif = table.Column<decimal>(type: "numeric(10,2)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK__VehicleT__3214EC0735D28DED", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "ViolationTypes",
-                columns: table => new
-                {
-                    ViolationTypeId = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    Description = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    DefaultPenaltyAmount = table.Column<decimal>(type: "numeric(10,2)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK__Violatio__3B1A4D1D71E82FAB", x => x.ViolationTypeId);
+                    table.PrimaryKey("PK_TollGates", x => x.GateId);
                 });
 
             migrationBuilder.CreateTable(
                 name: "Vehicles",
                 columns: table => new
                 {
+                    VehicleId = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Spz = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    TypeId = table.Column<int>(type: "integer", nullable: false),
-                    EmissionClass = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: true),
+                    CountryCode = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false, defaultValue: "CZ"),
+                    Vin = table.Column<string>(type: "character varying(17)", maxLength: 17, nullable: true),
+                    Type = table.Column<int>(type: "integer", nullable: false),
+                    FuelType = table.Column<int>(type: "integer", nullable: false),
+                    EmissionClass = table.Column<int>(type: "integer", nullable: false),
                     RegisteredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__Vehicles__CA1E142DEAD30959", x => x.Spz);
-                    table.ForeignKey(
-                        name: "FK__Vehicles__TypeId__5FB337D6",
-                        column: x => x.TypeId,
-                        principalTable: "VehicleTypes",
-                        principalColumn: "Id");
+                    table.PrimaryKey("PK_Vehicles", x => x.VehicleId);
                 });
 
             migrationBuilder.CreateTable(
@@ -83,94 +54,93 @@ namespace HighwayTollsystem.Migrations
                 {
                     PassageId = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Spz = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    VehicleId = table.Column<long>(type: "bigint", nullable: false),
                     GateId = table.Column<int>(type: "integer", nullable: false),
-                    Timestamp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Timestamp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()"),
                     VehicleSpeed = table.Column<int>(type: "integer", nullable: false),
-                    CalculatedFee = table.Column<decimal>(type: "numeric(10,2)", nullable: false),
-                    IsVignetteValid = table.Column<bool>(type: "boolean", nullable: false)
+                    CalculatedFee = table.Column<decimal>(type: "numeric(10,2)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__Passages__CC0F002C4A8A415B", x => x.PassageId);
+                    table.PrimaryKey("PK_Passages", x => x.PassageId);
                     table.ForeignKey(
-                        name: "FK__Passages__GateId__6D0D32F4",
+                        name: "FK_Passages_TollGates_GateId",
                         column: x => x.GateId,
                         principalTable: "TollGates",
-                        principalColumn: "GateId");
+                        principalColumn: "GateId",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK__Passages__Spz__6C190EBB",
-                        column: x => x.Spz,
+                        name: "FK_Passages_Vehicles_VehicleId",
+                        column: x => x.VehicleId,
                         principalTable: "Vehicles",
-                        principalColumn: "Spz");
+                        principalColumn: "VehicleId",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Stk",
+                name: "VehicleInspections",
                 columns: table => new
                 {
-                    StkId = table.Column<int>(type: "integer", nullable: false)
+                    VehicleInspectionId = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Spz = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    VehicleId = table.Column<long>(type: "bigint", nullable: false),
                     ValidTo = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     EmissionsValidTo = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__Stk__56A80AECC8856588", x => x.StkId);
+                    table.PrimaryKey("PK_VehicleInspections", x => x.VehicleInspectionId);
                     table.ForeignKey(
-                        name: "FK__Stk__Spz__693CA210",
-                        column: x => x.Spz,
+                        name: "FK_VehicleInspections_Vehicles_VehicleId",
+                        column: x => x.VehicleId,
                         principalTable: "Vehicles",
-                        principalColumn: "Spz");
+                        principalColumn: "VehicleId",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
                 name: "Vignettes",
                 columns: table => new
                 {
-                    VignetteId = table.Column<int>(type: "integer", nullable: false)
+                    VignetteId = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Spz = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    VehicleId = table.Column<long>(type: "bigint", nullable: false),
                     ValidFrom = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     ValidTo = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     PurchaseDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__Vignette__C81AEC1FA0C45C6E", x => x.VignetteId);
+                    table.PrimaryKey("PK_Vignettes", x => x.VignetteId);
                     table.ForeignKey(
-                        name: "FK__Vignettes__Spz__656C112C",
-                        column: x => x.Spz,
+                        name: "FK_Vignettes_Vehicles_VehicleId",
+                        column: x => x.VehicleId,
                         principalTable: "Vehicles",
-                        principalColumn: "Spz");
+                        principalColumn: "VehicleId",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
                 name: "TrafficViolations",
                 columns: table => new
                 {
-                    ViolationId = table.Column<int>(type: "integer", nullable: false)
+                    ViolationId = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     PassageId = table.Column<long>(type: "bigint", nullable: false),
-                    ViolationTypeId = table.Column<int>(type: "integer", nullable: false),
+                    ViolationType = table.Column<int>(type: "integer", nullable: false),
                     Details = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     ActualPenaltyAmount = table.Column<decimal>(type: "numeric(10,2)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__TrafficV__18B6DC086635FFDB", x => x.ViolationId);
+                    table.PrimaryKey("PK_TrafficViolations", x => x.ViolationId);
                     table.ForeignKey(
-                        name: "FK__TrafficVi__Passa__72C60C4A",
+                        name: "FK_TrafficViolations_Passages_PassageId",
                         column: x => x.PassageId,
                         principalTable: "Passages",
-                        principalColumn: "PassageId");
-                    table.ForeignKey(
-                        name: "FK__TrafficVi__Viola__73BA3083",
-                        column: x => x.ViolationTypeId,
-                        principalTable: "ViolationTypes",
-                        principalColumn: "ViolationTypeId");
+                        principalColumn: "PassageId",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
@@ -179,14 +149,9 @@ namespace HighwayTollsystem.Migrations
                 column: "GateId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Passages_Spz",
+                name: "IX_Passages_VehicleId",
                 table: "Passages",
-                column: "Spz");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Stk_Spz",
-                table: "Stk",
-                column: "Spz");
+                column: "VehicleId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TrafficViolations_PassageId",
@@ -194,35 +159,30 @@ namespace HighwayTollsystem.Migrations
                 column: "PassageId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TrafficViolations_ViolationTypeId",
-                table: "TrafficViolations",
-                column: "ViolationTypeId");
+                name: "IX_VehicleInspections_VehicleId",
+                table: "VehicleInspections",
+                column: "VehicleId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Vehicles_TypeId",
+                name: "IX_Vehicles_Spz_CountryCode",
                 table: "Vehicles",
-                column: "TypeId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Vignettes_Spz_Dates",
-                table: "Vignettes",
-                columns: new[] { "Spz", "ValidFrom", "ValidTo" });
-
-            migrationBuilder.CreateIndex(
-                name: "UQ__Violatio__A25C5AA7571436D1",
-                table: "ViolationTypes",
-                column: "Code",
+                columns: new[] { "Spz", "CountryCode" },
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Vignettes_VehicleId_ValidFrom_ValidTo",
+                table: "Vignettes",
+                columns: new[] { "VehicleId", "ValidFrom", "ValidTo" });
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Stk");
+                name: "TrafficViolations");
 
             migrationBuilder.DropTable(
-                name: "TrafficViolations");
+                name: "VehicleInspections");
 
             migrationBuilder.DropTable(
                 name: "Vignettes");
@@ -231,16 +191,10 @@ namespace HighwayTollsystem.Migrations
                 name: "Passages");
 
             migrationBuilder.DropTable(
-                name: "ViolationTypes");
-
-            migrationBuilder.DropTable(
                 name: "TollGates");
 
             migrationBuilder.DropTable(
                 name: "Vehicles");
-
-            migrationBuilder.DropTable(
-                name: "VehicleTypes");
         }
     }
 }

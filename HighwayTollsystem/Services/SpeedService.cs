@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HighwayTollsystem.Services
 {
-    
+
     public class SpeedService
     {
         private readonly HighwayTollContext _db;
@@ -20,14 +20,14 @@ namespace HighwayTollsystem.Services
             else speedTolerance = (int)Math.Floor(speedTolerance * 0.97);
 
 
-            
+
 
 
             if (speedTolerance <= 0) return null;
             return speedTolerance;
 
-            
-            
+
+
         }
     }
 }

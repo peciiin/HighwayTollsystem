@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace HighwayTollsystem.Models;
+﻿namespace HighwayTollsystem.Models;
 
 public partial class Passage
 {
     public long PassageId { get; set; }
 
-    public string Spz { get; set; } = null!;
+    public long VehicleId { get; set; }
 
     public int GateId { get; set; }
 
@@ -17,11 +14,9 @@ public partial class Passage
 
     public decimal CalculatedFee { get; set; }
 
-    public bool IsVignetteValid { get; set; }
+    public virtual TollGate Gate { get; set; } = null!;
 
-    public virtual TollGate? Gate { get; set; } = null!;
-
-    public virtual Vehicle? SpzNavigation { get; set; } = null!;
+    public virtual Vehicle Vehicle { get; set; } = null!;
 
     public virtual ICollection<TrafficViolation> TrafficViolations { get; set; } = new List<TrafficViolation>();
 }

@@ -31,7 +31,7 @@ namespace HighwayTollsystem.Services
                 .Where(s => s.Spz == vehicle.Spz)
                 .OrderByDescending(s => s.CreatedAt)
                 .FirstOrDefaultAsync();
-            
+
             if (latestStk == null) return false;
 
 

@@ -8,7 +8,7 @@ namespace HighwayTollsystem.Controllers
     [Route("api/[controller]")]
     public class AnalyticsController : ControllerBase
     {
-        
+
         public readonly HighwayTollContext _db;
         private readonly AnalyticsService _analyticsService;
         public AnalyticsController(HighwayTollContext db, AnalyticsService analyticsService)

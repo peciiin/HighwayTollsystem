@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace HighwayTollsystem.Models;
 
-namespace HighwayTollsystem.Models;
+
 
 public partial class TollGate
 {

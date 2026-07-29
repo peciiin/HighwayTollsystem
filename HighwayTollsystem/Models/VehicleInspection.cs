@@ -1,16 +1,16 @@
 ﻿namespace HighwayTollsystem.Models;
 
-public partial class Vignette
+public partial class VehicleInspection
 {
-    public long VignetteId { get; set; }
+    public long VehicleInspectionId { get; set; }
 
     public long VehicleId { get; set; }
 
-    public DateTime ValidFrom { get; set; }
-
     public DateTime ValidTo { get; set; }
 
-    public DateTime PurchaseDate { get; set; }
+    public DateTime EmissionsValidTo { get; set; }
+
+    public DateTime CreatedAt { get; set; }
 
     public virtual Vehicle Vehicle { get; set; } = null!;
 }

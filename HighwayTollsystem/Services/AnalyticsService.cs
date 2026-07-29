@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace HighwayTollsystem.Services
 {
-    
+
     public class AnalyticsService
     {
         private readonly HighwayTollContext _db;
@@ -95,7 +95,7 @@ namespace HighwayTollsystem.Services
         {
             public int TotalPassages { get; set; }
             public int TotalViolations { get; set; }
-         
+
             public decimal TotalPenaltyAmount { get; set; }
             public int TotalPersonalCars { get; set; }
             public int TotalPersonalCarsUnique { get; set; }
