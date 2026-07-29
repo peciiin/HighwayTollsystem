@@ -1,128 +1,132 @@
-﻿using HighwayTollsystem.Models;
+﻿using HighwayTollsystem.Enums;
+using HighwayTollsystem.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace HighwayTollsystem.Services
+namespace HighwayTollsystem.Services;
+
+public class TollService
 {
-    public class TollService
+    private readonly HighwayTollContext _db;
+    private readonly VignetteService _vignetteService;
+    private readonly SpeedService _speedService;
+    private readonly VehicleInspectionService _vehicleInspectionService;
+
+    public TollService(
+        HighwayTollContext db,
+        VignetteService vignetteService,
+        SpeedService speedService,
+        VehicleInspectionService vehicleInspectionService)
     {
-        private readonly HighwayTollContext _db;
-        private readonly VignetteService _vignetteService;
-        private readonly SpeedService _speedService;
-        private readonly StkService _stkService;
+        _db = db;
+        _vignetteService = vignetteService;
+        _speedService = speedService;
+        _vehicleInspectionService = vehicleInspectionService;
+    }
 
-        public TollService(HighwayTollContext db, VignetteService vignetteService, SpeedService speedService, StkService stkService)
+    public async Task PassageProcessingAsync(Passage passage, string detectedSpz)
+    {
+        var vehicle = await _db.Vehicles.AsNoTracking().FirstOrDefaultAsync(x => x.Spz == detectedSpz);
+
+        if (vehicle == null)
         {
-            _db = db;
-            _vignetteService = vignetteService;
-            _speedService = speedService;
-            _stkService = stkService;
-        }
-
-        public async Task PassageProcessingAsync(Passage passage)
-        {
-            var violationTypes = await _db.ViolationTypes
-                .AsNoTracking()
-                .ToDictionaryAsync(v => v.Code, v => v);
-
-
-
-
-
-            var vehicle = await _db.Vehicles
-                .AsNoTracking()
-                .Include(t => t.Type)
-                .FirstOrDefaultAsync(x => x.Spz == passage.Spz);
-
-
-
-            if (vehicle == null)
-            {
-                string originalSpz = passage.Spz;
-
-                passage.Spz = "UNKNOWN";
-                passage.CalculatedFee = 0.0m;
-                passage.IsVignetteValid = false;
-
-                _db.Passages.Add(passage);
-
-                CreateViolation(passage, "UNREGISTERED_VEHICLE",
-                    $"Vehicle with detected SPZ '{originalSpz}' is not registered in the system!", violationTypes);
-
-                await _db.SaveChangesAsync();
-                return;
-            }
-
-
-
-            if (vehicle.Type?.TypeName == "TRUCK")
-            {
-                passage.CalculatedFee = vehicle.Type.BaseTarif ?? 150.0m;
-            }
-            else
-            {
-                passage.CalculatedFee = 0.0m;
-            }
-
-
-
-
-            bool isVignetteValid = await _vignetteService.CheckVignetteAsync(vehicle, passage.Timestamp);
-            passage.IsVignetteValid = isVignetteValid;
-
+            passage.CalculatedFee = 0.0m;
             _db.Passages.Add(passage);
 
-            if (!isVignetteValid)
-            {
-                CreateViolation(passage, "MISSING_VIGNETTE", "Vehicle is missing vignette", violationTypes);
-            }
-
-            int? speedOver = _speedService.GetSpeedOverLimit(passage, vehicle);
-            if (speedOver != null)
-            {
-                string speedCode = speedOver.Value switch
-                {
-                    < 20 => "SPEED_LOW",
-                    < 50 => "SPEED_MEDIUM",
-                    _ => "SPEED_HIGH"
-                };
-
-                int speedLimit = vehicle.Type?.TypeName == "TRUCK" ? 90 : 130;
-
-                CreateViolation(passage, speedCode,
-                    $"Max speed for {vehicle.Type?.TypeName}: {speedLimit} km/h. " +
-                    $"Detected: {passage.VehicleSpeed} km/h. " +
-                    $"Violation by +{speedOver.Value} km/h (after tolerance).", violationTypes);
-            }
-
-            bool isStkValid = await _stkService.IsStkValidAsync(vehicle, passage.Timestamp);
-            if (!isStkValid)
-            {
-                CreateViolation(passage, "EXPIRED_STK", "Vehicle has expired stk.", violationTypes);
-            }
-
-            bool isEmissionsValid = await _stkService.IsEmisionValidAsync(vehicle, passage.Timestamp);
-            if (!isEmissionsValid)
-            {
-                CreateViolation(passage, "EMISSION_FAILURE", "Vehicle has expired emissions.", violationTypes);
-            }
+            CreateViolation(
+                passage,
+                ViolationTypeCode.NoVignette,
+                $"Vehicle with detected SPZ '{detectedSpz}' is not registered in the system.",
+                5000.0m);
 
             await _db.SaveChangesAsync();
+            return;
         }
 
-        private void CreateViolation(Passage passage, string violationTypeCode, string details, Dictionary<string, ViolationType> violationTypes)
+        passage.VehicleId = vehicle.VehicleId;
+        passage.CalculatedFee = CalculateTollFee(vehicle);
+        _db.Passages.Add(passage);
+        var vignetteParallel =  _vignetteService.CheckVignetteAsync(vehicle, passage.Timestamp);
+        var inspectionTaskParallel =  _vehicleInspectionService.IsInspectionAndEmissionValidAsync(vehicle, passage.Timestamp);
+        await Task.WhenAll(vignetteParallel, inspectionTaskParallel); // big optimalizaton xd
+
+
+
+
+        bool isVignetteValid = await vignetteParallel;
+        var (isInspectionValid, isEmissionValid) = await inspectionTaskParallel;
+
+        if (!isVignetteValid)
         {
-            if (violationTypes.TryGetValue(violationTypeCode, out var violationType))
-            {
-                var violation = new TrafficViolation
-                {
-                    Passage = passage,
-                    ViolationTypeId = violationType.ViolationTypeId,
-                    Details = details,
-                    ActualPenaltyAmount = violationType.DefaultPenaltyAmount
-                };
-
-                _db.TrafficViolations.Add(violation);
-            }
+            CreateViolation(
+                passage,
+                ViolationTypeCode.NoVignette,
+                "Vehicle is missing valid vignette.",
+                1500.0m);
         }
+
+
+
+
+        // calculating speed over the speed limit with tolerance deducted (if camera captures 150 it deducts 3% from 150 = 145,5, return 145,5 - 130 (limit for car) = 14,5 over speed limit)
+        int? speedOver = _speedService.GetSpeedOverLimit(passage, vehicle);
+        if (speedOver != null)
+        {
+            int speedLimit = vehicle.Type == VehicleType.Truck ? 90 : 130;
+            decimal penalty = speedOver.Value switch
+            {
+                < 20 => 1000.0m,
+                < 50 => 2500.0m,
+                _ => 5000.0m
+            };
+
+            CreateViolation(
+                passage,
+                ViolationTypeCode.Speeding,
+                $"Max speed for {vehicle.Type}: {speedLimit} km/h. Detected: {passage.VehicleSpeed} km/h. Exceeded by + {speedOver.Value} km/h.",
+                penalty);
+        }
+
+
+
+
+        if (!isInspectionValid)
+        {
+            CreateViolation(
+                passage,
+                ViolationTypeCode.ExpiredVehicleInspection,
+                "Vehicle has expired technical inspection.",
+                2000.0m);
+        }
+        if (!isEmissionValid)
+        {
+            CreateViolation(
+                passage,
+                ViolationTypeCode.ExpiredEmission,
+                "Vehicle has expired emissions.",
+                1500.0m);
+        }
+        await _db.SaveChangesAsync();
+    }
+
+    private decimal CalculateTollFee(Vehicle vehicle)
+    {
+        return vehicle.Type switch
+        {
+            VehicleType.Truck => 150.0m,
+            VehicleType.Other => 100.0m,
+            _ => 0.0m
+        };
+    }
+
+    private void CreateViolation(Passage passage, ViolationTypeCode typeCode, string details, decimal penaltyAmount)
+    {
+        var violation = new TrafficViolation
+        {
+            Passage = passage,
+            ViolationType = typeCode,
+            Details = details,
+            ActualPenaltyAmount = penaltyAmount
+        };
+        _db.TrafficViolations.Add(violation);
     }
 }

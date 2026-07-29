@@ -1,32 +1,27 @@
-﻿using HighwayTollsystem.Models;
-using Microsoft.AspNetCore.Components.Web;
+﻿using HighwayTollsystem.Enums;
+using HighwayTollsystem.Models;
 using Microsoft.EntityFrameworkCore;
 
+namespace HighwayTollsystem.Services;
 
-namespace HighwayTollsystem.Services
+public class VignetteService
 {
+    private readonly HighwayTollContext _db;
 
-    public class VignetteService
+    public VignetteService(HighwayTollContext db)
     {
-        private readonly HighwayTollContext _db;
+        _db = db;
+    }
 
-        public VignetteService(HighwayTollContext db)
-        {
-            _db = db;
-        }
-        // test one more
-        public async Task<bool> CheckVignetteAsync(Vehicle vehicle, DateTime passGateTime)
-        {
-            if (vehicle.Type?.TypeName == "TRUCK")
-            {
-                return true;
-            }
+    public async Task<bool> CheckVignetteAsync(Vehicle vehicle, DateTime passGateTime)
+    {
+        if (vehicle.Type == VehicleType.Truck) return true;
+        
 
-            var validVignette = await _db.Vignettes
-                .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.Spz == vehicle.Spz && x.ValidFrom <= passGateTime && x.ValidTo >= passGateTime);
 
-            return validVignette != null;
-        }
+        return await _db.Vignettes.AsNoTracking().AnyAsync(x => x.VehicleId == vehicle.VehicleId
+            && x.ValidFrom <= passGateTime
+            && x.ValidTo >= passGateTime
+            );
     }
 }

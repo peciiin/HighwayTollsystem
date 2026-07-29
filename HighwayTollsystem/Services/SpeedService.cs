@@ -1,4 +1,5 @@
 ﻿using HighwayTollsystem.Models;
+using HighwayTollsystem.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace HighwayTollsystem.Services
@@ -15,17 +16,13 @@ namespace HighwayTollsystem.Services
 
         public int? GetSpeedOverLimit(Passage passage, Vehicle vehicle)
         {
-            int speedTolerance = passage.VehicleSpeed;
-            if (speedTolerance <= 100) speedTolerance -= 3;
-            else speedTolerance = (int)Math.Floor(speedTolerance * 0.97);
+            int speed = passage.VehicleSpeed;
+            int speedLimit = vehicle.Type == VehicleType.Truck ? 90 : 130;
 
+            if (speed <= 100) speed -= 3;
+            else speed = (int)Math.Floor(speed * 0.97);
 
-
-
-
-            if (speedTolerance <= 0) return null;
-            return speedTolerance;
-
+            return (speed - speedLimit) > 0 ? speed - speedLimit : null;
 
 
         }

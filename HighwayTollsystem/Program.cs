@@ -12,7 +12,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<HighwayTollsystem.Services.TollService>();
-builder.Services.AddScoped<HighwayTollsystem.Services.StkService>();
+builder.Services.AddScoped<HighwayTollsystem.Services.VehicleInspectionService>();
 builder.Services.AddScoped<HighwayTollsystem.Services.SpeedService>();
 builder.Services.AddScoped<HighwayTollsystem.Services.VignetteService>();
 builder.Services.AddScoped<HighwayTollsystem.Services.AnalyticsService>();
