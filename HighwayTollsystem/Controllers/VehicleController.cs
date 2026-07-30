@@ -1,6 +1,7 @@
 ﻿using HighwayTollsystem.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using HighwayTollsystem.Enums;
 
 namespace HighwayTollsystem.Controllers
 {
@@ -18,7 +19,7 @@ namespace HighwayTollsystem.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var vehicles = await _db.Vehicles.Include(v => v.Type).ToListAsync();
+            var vehicles = await _db.Vehicles.AsNoTracking().ToListAsync();
             return Ok(vehicles);
         }
 
