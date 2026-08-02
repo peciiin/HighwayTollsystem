@@ -30,6 +30,7 @@ public class TollService
         if (vehicle == null)
         {
             passage.CalculatedFee = 0.0m;
+            passage.VehicleId = null;
             _db.Passages.Add(passage);
 
             CreateViolation(

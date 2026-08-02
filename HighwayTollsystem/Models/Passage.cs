@@ -4,7 +4,7 @@ public partial class Passage
 {
     public long PassageId { get; set; }
 
-    public long VehicleId { get; set; }
+    public long? VehicleId { get; set; }
 
     public int GateId { get; set; }
 

@@ -2,7 +2,7 @@
 
 namespace HighwayTollsystem.DTOs
 {
-    public class RegisterNewVehicle
+    public class RegisterNewVehicleDto
     {
         public string Spz { get; set; } = null!;
         public VehicleType Type { get; set; }

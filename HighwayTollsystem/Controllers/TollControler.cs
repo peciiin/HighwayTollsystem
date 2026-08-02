@@ -1,6 +1,8 @@
-﻿using HighwayTollsystem.Models;
+﻿using HighwayTollsystem.DTOs;
+using HighwayTollsystem.Models;
 using HighwayTollsystem.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace HighwayTollsystem.Controllers
 {
@@ -9,46 +11,34 @@ namespace HighwayTollsystem.Controllers
     public class TollController : ControllerBase
     {
         private readonly TollService _tollService;
+        private readonly HighwayTollContext _db;
 
-        public TollController(TollService tollService)
+        public TollController(TollService tollService, HighwayTollContext db)
         {
             _tollService = tollService;
+            _db = db;
         }
 
         // POST: api/toll/passage
         [HttpPost("passage")]
-        public async Task<IActionResult> SimulatePassage([FromBody] PassageSimulateDto dto)
+        public async Task<IActionResult> RegisterTollPass([FromBody] RegisterTollPassDto passDto)
         {
+            var gateExists = await _db.TollGates.AsNoTracking().AnyAsync(g => g.GateId == passDto.TollGateId);
+            if (!gateExists) return BadRequest($"Toll gate with ID {passDto.TollGateId} does not exist.");
+            
+
             var passage = new Passage
             {
-                Spz = dto.Spz.ToUpper(),
-                GateId = dto.GateId,
-                Timestamp = dto.Timestamp ?? DateTime.Now,
-                VehicleSpeed = dto.VehicleSpeed
+                GateId = passDto.TollGateId,
+                VehicleSpeed = passDto.VehicleSpeed,
+                Timestamp = DateTime.UtcNow
             };
 
-            try
-            {
-                await _tollService.PassageProcessingAsync(passage);
 
-                return Ok(new
-                {
-                    message = "Passage successfully processed and checked by the toll system.",
-                    analyzedPassage = passage
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"An error occurred while processing the toll: {ex.Message}");
-            }
+            await _tollService.PassageProcessingAsync(passage, passDto.DetectedSpz);
+
+            return Ok(passage);
         }
     }
 
-    public class PassageSimulateDto
-    {
-        public string Spz { get; set; } = null!;
-        public int GateId { get; set; }
-        public int VehicleSpeed { get; set; }
-        public DateTime? Timestamp { get; set; }
-    }
 }

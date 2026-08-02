@@ -55,17 +55,33 @@ namespace HighwayTollsystem.Controllers
                 query = query.Where(v => v.EmissionClass == filter.EmissionClass.Value);
             }
 
+            int pageSize = filter.PageSize > 0 ? Math.Min(filter.PageSize, 100) : 10;
+            int pageNumber = filter.PageNumber > 0 ? filter.PageNumber : 1;
+            int skip = (pageNumber - 1) * pageSize;
 
-
-            int skip = (filter.PageNumber - 1) * filter.PageSize;
             var vehicles = await query
-                .OrderByDescending(v => v.RegisteredAt).Skip(skip).Take(filter.PageSize).ToListAsync();
+                .OrderByDescending(v => v.RegisteredAt)
+                .Skip(skip)
+                .Take(pageSize)
+                .Select(v => new
+                {
+                    v.VehicleId,
+                    v.Spz,
+                    v.Type,
+                    v.FuelType,
+                    v.EmissionClass,
+                    v.CountryCode,
+                    v.Vin,
+                    v.RegisteredAt
+                })
+                .ToListAsync();
+
             return Ok(vehicles);
         }
 
 
-        [HttpPost]
-        public async Task<ActionResult> CreateVehicle([FromBody] RegisterNewVehicle dtoVehicle)
+        [HttpPost("add-vehicle")]
+        public async Task<ActionResult> CreateVehicle([FromBody] RegisterNewVehicleDto dtoVehicle)
         {
             var countryCode = dtoVehicle.CountryCode?.ToUpper() ?? "CZ";
             if (string.IsNullOrWhiteSpace(dtoVehicle.Spz)) return BadRequest("No SPZ entered.");
@@ -89,7 +105,17 @@ namespace HighwayTollsystem.Controllers
 
             _db.Vehicles.Add(vehicle);
             await _db.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetVehicles), new { spz = vehicle.Spz }, vehicle);
+            return Ok(new
+            {
+                vehicle.VehicleId,
+                vehicle.Spz,
+                vehicle.Type,
+                vehicle.FuelType,
+                vehicle.EmissionClass,
+                vehicle.CountryCode,
+                vehicle.Vin,
+                vehicle.RegisteredAt
+            });
         }
     }
 
