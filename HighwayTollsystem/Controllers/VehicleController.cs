@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using HighwayTollsystem.Enums;
-
+using HighwayTollsystem.DTOs;
 namespace HighwayTollsystem.Controllers
 {
     [ApiController]
@@ -17,46 +17,80 @@ namespace HighwayTollsystem.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<ActionResult> GetVehicles([FromQuery] VehicleFilterDto filter)
         {
-            var vehicles = await _db.Vehicles.AsNoTracking().ToListAsync();
+            var query = _db.Vehicles.AsNoTracking().AsQueryable();
+            if (filter.FuelType.HasValue)
+            {
+                query = query.Where(v => v.FuelType == filter.FuelType.Value);
+            }
+            if (filter.VehicleType.HasValue)
+            {
+                query = query.Where(v => v.Type == filter.VehicleType.Value);
+            }
+            if (!string.IsNullOrWhiteSpace(filter.Spz))
+            {
+                var spz = filter.Spz.ToUpper();
+                query = query.Where(v => v.Spz.Contains(spz));
+            }
+            if (filter.RegisteredFrom.HasValue)
+            {
+                query = query.Where(v => v.RegisteredAt >= filter.RegisteredFrom.Value);
+            }
+            if (filter.RegisteredTo.HasValue)
+            {
+                query = query.Where(v => v.RegisteredAt <= filter.RegisteredTo.Value);
+            }
+            if (!string.IsNullOrEmpty(filter.CountryCode))
+            {
+                query = query.Where(v => v.CountryCode == filter.CountryCode);
+            }
+            if (!string.IsNullOrWhiteSpace(filter.Vin))
+            {
+                var vinUpper = filter.Vin.ToUpper();
+                query = query.Where(v => v.Vin != null && v.Vin.Contains(vinUpper));
+            }
+            if (filter.EmissionClass.HasValue)
+            {
+                query = query.Where(v => v.EmissionClass == filter.EmissionClass.Value);
+            }
+
+
+
+            int skip = (filter.PageNumber - 1) * filter.PageSize;
+            var vehicles = await query
+                .OrderByDescending(v => v.RegisteredAt).Skip(skip).Take(filter.PageSize).ToListAsync();
             return Ok(vehicles);
         }
 
+
         [HttpPost]
-        public async Task<IActionResult> Register([FromBody] VehicleDto dto)
+        public async Task<ActionResult> CreateVehicle([FromBody] RegisterNewVehicle dtoVehicle)
         {
-            var typeExists = await _db.VehicleTypes.AnyAsync(t => t.Id == dto.VehicleTypeId);
-            if (!typeExists)
+            var countryCode = dtoVehicle.CountryCode?.ToUpper() ?? "CZ";
+            if (string.IsNullOrWhiteSpace(dtoVehicle.Spz)) return BadRequest("No SPZ entered.");
+            
+            var spz = dtoVehicle.Spz.ToUpper();
+            var exist = await _db.Vehicles.AnyAsync(v => v.Spz == spz);
+            if (exist)
             {
-                return BadRequest("The specified VehicleTypeId does not exist in the database!");
+                return BadRequest($"Vehicle with SPZ {spz} already exists.");
             }
-
-            var exists = await _db.Vehicles.AnyAsync(v => v.Spz == dto.Spz);
-            if (exists)
-            {
-                return BadRequest($"Vehicle with SPZ '{dto.Spz}' is already registered.");
-            }
-
             var vehicle = new Vehicle
             {
-                Spz = dto.Spz.ToUpper(),
-                TypeId = dto.VehicleTypeId,
-                EmissionClass = dto.EmissionClass ?? "EURO 6",
-                RegisteredAt = DateTime.Now
+                Spz = spz,
+                Type = dtoVehicle.Type,
+                FuelType = dtoVehicle.FuelType,
+                EmissionClass = dtoVehicle.EmissionClass,
+                CountryCode = countryCode,
+                Vin = dtoVehicle.Vin?.ToUpper(),
+                RegisteredAt = DateTime.UtcNow
             };
 
             _db.Vehicles.Add(vehicle);
             await _db.SaveChangesAsync();
-
-            return Ok(new { message = $"Vehicle {vehicle.Spz} successfully registered.", vehicle });
+            return CreatedAtAction(nameof(GetVehicles), new { spz = vehicle.Spz }, vehicle);
         }
     }
 
-    public class VehicleDto
-    {
-        public string Spz { get; set; } = null!;
-        public int VehicleTypeId { get; set; }
-        public string? EmissionClass { get; set; }
-    }
 }
