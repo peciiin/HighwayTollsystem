@@ -24,6 +24,10 @@ namespace HighwayTollsystem.Controllers
         [HttpGet("top-gates")]
         public async Task<IActionResult> GetTopGates([FromQuery] int count = 5)
         {
+            if (count <= 0)
+            {
+                return BadRequest("Count must be a positive integer.");
+            }
             var topGates = await _analyticsService.GetTopGatesAsync(count);
             return Ok(topGates);
         }
