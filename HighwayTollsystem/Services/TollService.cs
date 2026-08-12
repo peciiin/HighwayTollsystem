@@ -43,6 +43,9 @@ public class TollService
             return;
         }
 
+
+
+
         passage.VehicleId = vehicle.VehicleId;
         passage.CalculatedFee = CalculateTollFee(vehicle);
         _db.Passages.Add(passage);

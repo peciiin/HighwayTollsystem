@@ -15,7 +15,7 @@ public class VignetteService
 
     public async Task<bool> CheckVignetteAsync(Vehicle vehicle, DateTime passGateTime)
     {
-        if (vehicle.Type == VehicleType.Truck) return true;
+        if (vehicle.Type == VehicleType.Truck || vehicle.Type == VehicleType.Motorcycle || vehicle.Type == VehicleType.Other) return true;
         
 
 
