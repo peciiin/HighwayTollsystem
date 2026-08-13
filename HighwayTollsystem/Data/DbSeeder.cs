@@ -1,4 +1,5 @@
 ﻿using HighwayTollsystem.Enums;
+using HighwayTollsystem.Interfaces;
 using HighwayTollsystem.Models;
 using HighwayTollsystem.Services;
 using Microsoft.EntityFrameworkCore;
@@ -6,7 +7,7 @@ namespace HighwayTollsystem.Data
 {
     public static class DbSeeder
     {
-        public static async Task SeedAsync(HighwayTollContext db, TollService tollService)
+        public static async Task SeedAsync(HighwayTollContext db, ITollService tollService)
         {
             await db.Database.EnsureCreatedAsync();
 
