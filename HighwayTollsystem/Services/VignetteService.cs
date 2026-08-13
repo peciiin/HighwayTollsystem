@@ -1,10 +1,11 @@
 ﻿using HighwayTollsystem.Enums;
+using HighwayTollsystem.Interfaces;
 using HighwayTollsystem.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace HighwayTollsystem.Services;
 
-public class VignetteService
+public class VignetteService : IVignetteService
 {
     private readonly HighwayTollContext _db;
 

@@ -1,10 +1,11 @@
 ﻿using HighwayTollsystem.Enums;
+using HighwayTollsystem.Interfaces;
 using HighwayTollsystem.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace HighwayTollsystem.Services
 {
-    public class VehicleInspectionService
+    public class VehicleInspectionService : IVehicleInspectionService
     {
         private readonly HighwayTollContext _db;
         public VehicleInspectionService(HighwayTollContext db)

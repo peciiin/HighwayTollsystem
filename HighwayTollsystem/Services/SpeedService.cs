@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 namespace HighwayTollsystem.Services
 {
 
-    public class SpeedService
+    public class SpeedService : ISpeedService
     {
         private readonly HighwayTollContext _db;
 

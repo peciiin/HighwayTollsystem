@@ -1,10 +1,11 @@
 ﻿using HighwayTollsystem.Enums;
+using HighwayTollsystem.Interfaces;
 using HighwayTollsystem.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace HighwayTollsystem.Services;
 
-public class TollService
+public class TollService : ITollService
 {
     private readonly HighwayTollContext _db;
     private readonly VignetteService _vignetteService;
@@ -49,15 +50,11 @@ public class TollService
         passage.VehicleId = vehicle.VehicleId;
         passage.CalculatedFee = CalculateTollFee(vehicle);
         _db.Passages.Add(passage);
-        var vignetteParallel =  _vignetteService.CheckVignetteAsync(vehicle, passage.Timestamp);
-        var inspectionTaskParallel =  _vehicleInspectionService.IsInspectionAndEmissionValidAsync(vehicle, passage.Timestamp);
-        await Task.WhenAll(vignetteParallel, inspectionTaskParallel); // big optimalizaton xd
+
+        var isVignetteValid = await _vignetteService.CheckVignetteAsync(vehicle, passage.Timestamp);
+        var (isInspectionValid, isEmissionValid) = await _vehicleInspectionService.IsInspectionAndEmissionValidAsync(vehicle, passage.Timestamp);
 
 
-
-
-        bool isVignetteValid = await vignetteParallel;
-        var (isInspectionValid, isEmissionValid) = await inspectionTaskParallel;
 
         if (!isVignetteValid)
         {

@@ -1,5 +1,6 @@
 ﻿using HighwayTollsystem.DTOs;
 using HighwayTollsystem.Enums;
+using HighwayTollsystem.Interfaces;
 using HighwayTollsystem.Models;
 using HighwayTollsystem.Services;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +9,7 @@ using System.Linq;
 namespace HighwayTollsystem.Services
 {
 
-    public class AnalyticsService
+    public class AnalyticsService : IAnalyticsService
     {
         private readonly HighwayTollContext _db;
 
