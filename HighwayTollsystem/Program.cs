@@ -1,3 +1,4 @@
+using HighwayTollsystem.Data;
 using HighwayTollsystem.Interfaces;
 using HighwayTollsystem.Models;
 using HighwayTollsystem.Services;
@@ -23,9 +24,17 @@ builder.Services.AddScoped<ITollSimulatorService, TollSimulatorService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        var db = services.GetRequiredService<HighwayTollContext>();
+
+        await db.Database.MigrateAsync();
+        await DbSeeder.SeedAsync(db);
+    }
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }

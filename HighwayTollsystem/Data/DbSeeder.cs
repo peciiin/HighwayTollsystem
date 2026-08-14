@@ -7,9 +7,9 @@ namespace HighwayTollsystem.Data
 {
     public static class DbSeeder
     {
-        public static async Task SeedAsync(HighwayTollContext db, ITollService tollService)
+        public static async Task SeedAsync(HighwayTollContext db)
         {
-            await db.Database.EnsureCreatedAsync();
+            
 
 
             if (!await db.TollGates.AnyAsync())
@@ -149,8 +149,10 @@ namespace HighwayTollsystem.Data
             {
                 var tollGates = await db.TollGates.ToListAsync();
                 var existingVehicles = await db.Vehicles.ToListAsync();
+                 
+                var passages = new List<Passage>();
 
-                // 1. Generování průjezdů pro REGISTROVANÁ vozidla
+
                 foreach (var vehicle in existingVehicles)
                 {
                     int passageCount = Random.Shared.Next(1, 15);
@@ -162,29 +164,34 @@ namespace HighwayTollsystem.Data
                             ? Random.Shared.Next(80, 130)
                             : Random.Shared.Next(135, 180);
 
-                        var passage = new Passage
+                        passages.Add(new Passage
                         {
+                            VehicleId = vehicle.VehicleId,
                             GateId = tollGate.GateId,
                             Timestamp = DateTime.UtcNow.AddDays(-Random.Shared.Next(0, 365 * 2)),
                             VehicleSpeed = speed
-                        };
+                        });
 
-                        await tollService.PassageProcessingAsync(passage, vehicle.Spz);
+                        
                     }
                 }
 
                 for (int k = 0; k < 10; k++)
                 {
                     var tollGate = tollGates[Random.Shared.Next(tollGates.Count)];
-                    var passage = new Passage
+                    passages.Add(new Passage
                     {
                         GateId = tollGate.GateId,
+                        VehicleId = null,
                         Timestamp = DateTime.UtcNow.AddDays(-Random.Shared.Next(0, 30)),
-                        VehicleSpeed = 110
-                    };
+                        VehicleSpeed = Random.Shared.Next(80, 180)
+                    });
 
-                    await tollService.PassageProcessingAsync(passage, "UNKNOWN");
+                    
                 }
+
+                db.Passages.AddRange(passages);
+                await db.SaveChangesAsync();
             }
         }
 
