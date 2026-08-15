@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: highwaytoll-db
+    environment:
+      POSTGRES_DB: highway_toll
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: localpassword123
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

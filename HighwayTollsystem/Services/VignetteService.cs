@@ -17,8 +17,8 @@ public class VignetteService : IVignetteService
     public async Task<bool> CheckVignetteAsync(Vehicle vehicle, DateTime passGateTime)
     {
         if (vehicle.Type == VehicleType.Truck || vehicle.Type == VehicleType.Motorcycle || vehicle.Type == VehicleType.Other) return true;
-        
 
+        if (vehicle.EmissionClass == EmissionClass.EV) return true;
 
         return await _db.Vignettes.AsNoTracking().AnyAsync(x => x.VehicleId == vehicle.VehicleId
             && x.ValidFrom <= passGateTime

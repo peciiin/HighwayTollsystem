@@ -8,15 +8,15 @@ namespace HighwayTollsystem.Services;
 public class TollService : ITollService
 {
     private readonly HighwayTollContext _db;
-    private readonly VignetteService _vignetteService;
-    private readonly SpeedService _speedService;
-    private readonly VehicleInspectionService _vehicleInspectionService;
+    private readonly IVignetteService _vignetteService;
+    private readonly ISpeedService _speedService;
+    private readonly IVehicleInspectionService _vehicleInspectionService;
 
     public TollService(
         HighwayTollContext db,
-        VignetteService vignetteService,
-        SpeedService speedService,
-        VehicleInspectionService vehicleInspectionService)
+        IVignetteService vignetteService,
+        ISpeedService speedService,
+        IVehicleInspectionService vehicleInspectionService)
     {
         _db = db;
         _vignetteService = vignetteService;
