@@ -1,7 +1,11 @@
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using HighwayTollsystem.Data;
 using HighwayTollsystem.Interfaces;
+using HighwayTollsystem.Middlewares;
 using HighwayTollsystem.Models;
 using HighwayTollsystem.Services;
+using HighwayTollsystem.Validators;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,7 +15,14 @@ builder.Services.AddDbContext<HighwayTollContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 // Add services to the container.
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<RegisterNewVehicleDtoValidator>();
+
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -23,7 +34,7 @@ builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 builder.Services.AddScoped<ITollSimulatorService, TollSimulatorService>();
 
 var app = builder.Build();
-
+app.UseExceptionHandler();
 if (app.Environment.IsDevelopment())
 {
     using (var scope = app.Services.CreateScope())

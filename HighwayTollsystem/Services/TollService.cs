@@ -39,7 +39,7 @@ public class TollService : ITollService
             VehicleSpeed = registerPassDto.VehicleSpeed,
             Timestamp = DateTime.UtcNow
         };
-        var normalizedSpz = registerPassDto.DetectedSpz.Trim().ToUpper();
+        var normalizedSpz = registerPassDto.DetectedSpz?.Trim().ToUpper() ?? string.Empty;
         var vehicle = await _db.Vehicles.AsNoTracking().FirstOrDefaultAsync(x => x.Spz == normalizedSpz);
         
         if (vehicle == null)
