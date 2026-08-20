@@ -1,4 +1,5 @@
 ﻿using HighwayTollsystem.DTOs;
+using HighwayTollsystem.Interfaces;
 using HighwayTollsystem.Models;
 using HighwayTollsystem.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -10,34 +11,23 @@ namespace HighwayTollsystem.Controllers
     [Route("api/[controller]")]
     public class TollController : ControllerBase
     {
-        private readonly TollService _tollService;
+        private readonly ITollService _tollService;
         private readonly HighwayTollContext _db;
 
-        public TollController(TollService tollService, HighwayTollContext db)
+        public TollController(ITollService tollService, HighwayTollContext db)
         {
             _tollService = tollService;
             _db = db;
         }
 
         // POST: api/toll/passage
-        [HttpPost("passage")]
-        public async Task<IActionResult> RegisterTollPass([FromBody] RegisterTollPassDto passDto)
+        [HttpPost]
+        public async Task<ActionResult<PassageResponseDto>> CreatePassage([FromBody] RegisterTollPassDto dto)
         {
-            var gateExists = await _db.TollGates.AsNoTracking().AnyAsync(g => g.GateId == passDto.TollGateId);
-            if (!gateExists) return BadRequest($"Toll gate with ID {passDto.TollGateId} does not exist.");
-            
+            var result = await _tollService.PassageProcessingAsync(dto);
+            if (result == null) return NotFound($"Toll gate {dto.TollGateId} not found.");
 
-            var passage = new Passage
-            {
-                GateId = passDto.TollGateId,
-                VehicleSpeed = passDto.VehicleSpeed,
-                Timestamp = DateTime.UtcNow
-            };
-
-
-            await _tollService.PassageProcessingAsync(passage, passDto.DetectedSpz);
-
-            return Ok(passage);
+            return Ok(result);
         }
     }
 

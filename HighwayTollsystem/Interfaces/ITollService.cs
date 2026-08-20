@@ -1,9 +1,10 @@
-﻿using HighwayTollsystem.Models;
+﻿using HighwayTollsystem.DTOs;
+using HighwayTollsystem.Models;
 
 namespace HighwayTollsystem.Interfaces
 {
     public interface ITollService
     {
-        Task PassageProcessingAsync(Passage passage, string detectedSpz);
+        Task<PassageResponseDto?> PassageProcessingAsync(RegisterTollPassDto registerDto);
     }
 }

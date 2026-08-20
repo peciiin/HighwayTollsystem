@@ -1,6 +1,7 @@
-﻿using HighwayTollsystem.Models;
+﻿using HighwayTollsystem.DTOs;
+using HighwayTollsystem.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using HighwayTollsystem.Services;
+using System.ComponentModel.DataAnnotations;
 
 namespace HighwayTollsystem.Controllers
 {
@@ -9,30 +10,28 @@ namespace HighwayTollsystem.Controllers
     public class AnalyticsController : ControllerBase
     {
 
-        private readonly AnalyticsService _analyticsService;
-        public AnalyticsController(AnalyticsService analyticsService)
+        private readonly IAnalyticsService _analyticsService;
+        public AnalyticsController(IAnalyticsService analyticsService)
         {
             _analyticsService = analyticsService;
         }
 
         [HttpGet("dashboard")]
-        public async Task<IActionResult> GetDashboard()
+        public async Task<ActionResult<AnalyticsDashboardDto>> GetDashboard()
         {
             var dashboardData = await _analyticsService.GetDashboardAsync();
             return Ok(dashboardData);
         }
+
         [HttpGet("top-gates")]
-        public async Task<IActionResult> GetTopGates([FromQuery] int count = 5)
+        public async Task<ActionResult<List<AnalyticsGateStatsDto>>> GetTopGates([FromQuery, Range(1, 100)] int count = 10)
         {
-            if (count <= 0)
-            {
-                return BadRequest("Count must be a positive integer.");
-            }
             var topGates = await _analyticsService.GetTopGatesAsync(count);
             return Ok(topGates);
         }
+
         [HttpGet("breakdown-data")]
-        public async Task<IActionResult> GetBreakdownData()
+        public async Task<ActionResult<List<AnalyticsViolationsStatsDto>>> GetViolationBreakdown()
         {
             var breakdownData = await _analyticsService.GetViolationTypeBreakdownAsync();
             return Ok(breakdownData);

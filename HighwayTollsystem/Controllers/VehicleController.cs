@@ -17,7 +17,7 @@ namespace HighwayTollsystem.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult> GetVehicles([FromQuery] VehicleFilterDto filter)
+        public async Task<ActionResult<IEnumerable<VehicleResponseDto>>> GetVehicles([FromQuery] VehicleFilterDto filter)
         {
             var query = _db.Vehicles.AsNoTracking().AsQueryable();
             if (filter.FuelType.HasValue)
@@ -63,16 +63,16 @@ namespace HighwayTollsystem.Controllers
                 .OrderByDescending(v => v.RegisteredAt)
                 .Skip(skip)
                 .Take(pageSize)
-                .Select(v => new
+                .Select(v => new VehicleResponseDto
                 {
-                    v.VehicleId,
-                    v.Spz,
-                    v.Type,
-                    v.FuelType,
-                    v.EmissionClass,
-                    v.CountryCode,
-                    v.Vin,
-                    v.RegisteredAt
+                    VehicleId = v.VehicleId,
+                    Spz = v.Spz,
+                    Type = v.Type,
+                    FuelType = v.FuelType,
+                    EmissionClass = v.EmissionClass,
+                    CountryCode = v.CountryCode,
+                    Vin = v.Vin,
+                    RegisteredAt = v.RegisteredAt
                 })
                 .ToListAsync();
 
@@ -80,7 +80,7 @@ namespace HighwayTollsystem.Controllers
         }
 
 
-        [HttpPost("add-vehicle")]
+        [HttpPost]
         public async Task<ActionResult> CreateVehicle([FromBody] RegisterNewVehicleDto dtoVehicle)
         {
             var countryCode = dtoVehicle.CountryCode?.ToUpper() ?? "CZ";
