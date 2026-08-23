@@ -14,4 +14,5 @@ namespace HighwayTollsystem.Validators
             RuleFor(x => x.VehicleSpeed)
                 .InclusiveBetween(0, 300).WithMessage("VehicleSpeed must be between 0 and 300.");
         }
+    }
 }
