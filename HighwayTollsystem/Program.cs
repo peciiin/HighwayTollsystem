@@ -31,6 +31,7 @@ builder.Services.AddScoped<IVehicleInspectionService, VehicleInspectionService>(
 builder.Services.AddScoped<ISpeedService, SpeedService>();
 builder.Services.AddScoped<IVignetteService, VignetteService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+builder.Services.AddScoped<IVehicleService, VehicleService>();
 
 
 
