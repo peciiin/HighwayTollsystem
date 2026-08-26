@@ -30,7 +30,7 @@ namespace HighwayTollsystem.Controllers
             return Ok(topGates);
         }
 
-        [HttpGet("breakdown-data")]
+        [HttpGet("breakdown-violations")]
         public async Task<ActionResult<List<AnalyticsViolationsStatsDto>>> GetViolationBreakdown()
         {
             var breakdownData = await _analyticsService.GetViolationTypeBreakdownAsync();
