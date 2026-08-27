@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HighwayTollsystem.Tests.Unit
+namespace HighwayTollsystem.Tests.Unit.Services
 {
-    internal class VehicleInspectionTests
+    internal class TollServiceTests
     {
     }
 }

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HighwayTollsystem.Tests.Unit
+namespace HighwayTollsystem.Tests.Integration
 {
-    internal class VignetteServiceTests
+    internal class CustomWebApplicationFactory
     {
     }
 }
