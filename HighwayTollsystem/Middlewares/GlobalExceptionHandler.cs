@@ -21,7 +21,7 @@ namespace HighwayTollsystem.Middlewares
             {
                 Status = StatusCodes.Status500InternalServerError,
                 Title = "An error occurred while processing your request.",
-                Detail = ex.Message,
+                Detail = "An unexpected error occurred while processing your request.",
                 Instance = httpContext.Request.Path
             };
             httpContext.Response.StatusCode = details.Status.Value;
