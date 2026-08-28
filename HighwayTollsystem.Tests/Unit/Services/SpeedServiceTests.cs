@@ -10,6 +10,7 @@ using FluentAssertions;
 using HighwayTollsystem.Enums;
 using HighwayTollsystem.Models;
 
+
 namespace HighwayTollsystem.Tests.Unit.Services
 {
     public class SpeedServiceTests
