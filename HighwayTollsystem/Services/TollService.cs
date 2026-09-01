@@ -49,7 +49,7 @@ public class TollService : ITollService
 
             CreateViolation(
                 passage,
-                ViolationTypeCode.NoVignette,
+                ViolationTypeCode.UnregisteredVehicle,
                 $"Vehicle with detected SPZ '{normalizedSpz}' is not registered in the system.",
                 5000.0m);
 

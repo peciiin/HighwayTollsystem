@@ -154,6 +154,9 @@ namespace HighwayTollsystem.Data
                 var tollGates = await db.TollGates.ToListAsync();
                 var existingVehicles = await db.Vehicles.ToListAsync();
 
+                var allVignettes = await db.Vignettes.ToListAsync();
+                var allInspections = await db.VehicleInspections.ToListAsync();
+
                 var passages = new List<Passage>();
 
                 var violations = new List<TrafficViolation>();
@@ -197,7 +200,7 @@ namespace HighwayTollsystem.Data
 
                         if (vehicle.Type != VehicleType.Truck && vehicle.Type != VehicleType.Motorcycle && vehicle.Type != VehicleType.Other && vehicle.EmissionClass != EmissionClass.EV)
                         {
-                            bool hasVignette = vignettes.Any(v => v.VehicleId == vehicle.VehicleId && v.ValidFrom <= timestamp && v.ValidTo >= timestamp);
+                            bool hasVignette = allVignettes.Any(v => v.VehicleId == vehicle.VehicleId && v.ValidFrom <= timestamp && v.ValidTo >= timestamp);
 
 
                             if (!hasVignette)
@@ -245,7 +248,7 @@ namespace HighwayTollsystem.Data
 
 
 
-                        var inspection = inspections.FirstOrDefault(i => i.VehicleId == vehicle.VehicleId);
+                        var inspection = allInspections.FirstOrDefault(i => i.VehicleId == vehicle.VehicleId);
                         if (inspection != null)
                         {
                             if (inspection.ValidTo < timestamp)
@@ -300,7 +303,7 @@ namespace HighwayTollsystem.Data
                     violations.Add(new TrafficViolation
                     {
                         Passage = unknown,
-                        ViolationType = ViolationTypeCode.NoVignette,
+                        ViolationType = ViolationTypeCode.UnregisteredVehicle,
                         Details = "Vehicle is not registered in the system.",
                         ActualPenaltyAmount = 5000.0m
                     });
