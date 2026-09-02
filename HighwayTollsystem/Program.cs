@@ -7,7 +7,6 @@ using HighwayTollsystem.Models;
 using HighwayTollsystem.Services;
 using HighwayTollsystem.Validators;
 using Microsoft.EntityFrameworkCore;
-
 var builder = WebApplication.CreateBuilder(args);
 
 
@@ -48,8 +47,11 @@ if (app.Environment.IsDevelopment())
         var services = scope.ServiceProvider;
         var db = services.GetRequiredService<HighwayTollContext>();
 
-        await db.Database.MigrateAsync();
-        await DbSeeder.SeedAsync(db);
+        if (db.Database.IsRelational())
+        {
+            await db.Database.MigrateAsync();
+            await DbSeeder.SeedAsync(db);
+        }
     }
 
     app.UseSwagger();
@@ -63,3 +65,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }
