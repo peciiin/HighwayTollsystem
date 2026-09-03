@@ -29,12 +29,11 @@ namespace HighwayTollsystem.Tests.Integration
             _client = _factory.CreateClient();
         }
 
-        public async Task ResetDbAsync()
+        private async Task ResetDbAsync()
         {
+            await _factory.ResetDatabaseAsync();
             using var scope = _factory.Services.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<HighwayTollsystem.Models.HighwayTollContext>();
-            context.Database.EnsureDeleted();
-            context.Database.EnsureCreated();
 
             var vehicle1 = new Vehicle
             {
