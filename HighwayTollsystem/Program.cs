@@ -36,7 +36,7 @@ builder.Services.AddScoped<IVehicleService, VehicleService>();
 
 builder.Services.AddHostedService<TollSimulatorService>();
 
-
+builder.Services.AddHealthChecks().AddNpgSql(builder.Configuration.GetConnectionString("DefaultConnection")!);
 
 var app = builder.Build();
 app.UseExceptionHandler();
@@ -63,6 +63,8 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHealthChecks("/health");
 
 app.Run();
 
