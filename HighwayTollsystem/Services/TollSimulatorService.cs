@@ -9,7 +9,10 @@ namespace HighwayTollsystem.Services
 {
     public class TollSimulatorService : BackgroundService
     {
-        
+        int generatingDelay = 3; // Seconds delay in generation of tollpass
+
+
+
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ILogger<TollSimulatorService> _logger;
         private readonly Random _random = new Random();
@@ -25,7 +28,7 @@ namespace HighwayTollsystem.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(generatingDelay), stoppingToken);
 
             while (!stoppingToken.IsCancellationRequested)
             {
