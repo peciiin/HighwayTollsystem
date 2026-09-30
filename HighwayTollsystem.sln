@@ -7,6 +7,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HighwayTollsystem", "Highwa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HighwayTollsystem.Tests", "HighwayTollsystem.Tests\HighwayTollsystem.Tests.csproj", "{4B2C0BC2-FE4F-4BB5-A4B1-B13E655F80CE}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Položky řešení", "Položky řešení", "{73E6DEBC-5D85-E032-7380-14D1E53616C6}"
+	ProjectSection(SolutionItems) = preProject
+		docker-compose.yml = docker-compose.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

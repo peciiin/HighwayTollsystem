@@ -1,7 +1,8 @@
 services:
-  postgres:
+  db:
     image: postgres:16-alpine
-    container_name: highwaytoll-db
+    container_name: toll_postgres
+    restart: always
     environment:
       POSTGRES_DB: highway_toll
       POSTGRES_USER: postgres
@@ -9,7 +10,20 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: .
+      dockerfile: HighwayTollsystem/Dockerfile
+    container_name: toll_api
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=highway_toll;Username=postgres;Password=localpassword123"
 
 volumes:
-  pgdata:
+  postgres_data:
