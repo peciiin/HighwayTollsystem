@@ -59,7 +59,7 @@ namespace HighwayTollsystem.Services
                     {
                         GateId = g.Key,
                         PassageCount = g.Count(),
-                        TotalFeesCollected = g.Sum(p => p.CalculatedFee)
+                        TotalTollFeesCollectedFromBusTruckOther = g.Sum(p => p.CalculatedFee)
                     })
                     .OrderByDescending(g => g.PassageCount)
                     .Take(count)

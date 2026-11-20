@@ -4,6 +4,6 @@
     {
         public int GateId { get; set; }
         public int PassageCount { get; set; }
-        public decimal TotalFeesCollected { get; set; }
+        public decimal TotalTollFeesCollectedFromBusTruckOther { get; set; }
     }
 }
