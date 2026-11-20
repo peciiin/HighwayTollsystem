@@ -12,7 +12,8 @@ using System.Linq;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;
-using System.Threading.Tasks;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -22,6 +23,11 @@ namespace HighwayTollsystem.Tests.Integration
     {
         private readonly CustomWebApplicationFactory _factory;
         private readonly HttpClient _client;
+        private static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            PropertyNameCaseInsensitive = true,
+            Converters = { new JsonStringEnumConverter() }
+        };
 
         public AnalyticsControllerTests(CustomWebApplicationFactory factory)
         {
@@ -59,10 +65,8 @@ namespace HighwayTollsystem.Tests.Integration
                 RegisteredAt = DateTime.UtcNow.AddYears(-1)
             };
 
-
-
             var gate1 = new TollGate
-            { 
+            {
                 GateId = 1,
                 HighwayName = "D1",
                 KilometerPost = 10.0m,
@@ -81,7 +85,6 @@ namespace HighwayTollsystem.Tests.Integration
                 GpsLongitude = 17.1077m
             };
 
-            
             var passage1 = new Passage
             {
                 PassageId = 1,
@@ -89,8 +92,7 @@ namespace HighwayTollsystem.Tests.Integration
                 GateId = gate1.GateId,
                 Timestamp = DateTime.UtcNow.AddDays(-10),
                 VehicleSpeed = 140,
-                CalculatedFee = 0.0m,
-
+                CalculatedFee = 0.0m
             };
 
             var passage2 = new Passage
@@ -100,7 +102,7 @@ namespace HighwayTollsystem.Tests.Integration
                 GateId = gate2.GateId,
                 Timestamp = DateTime.UtcNow.AddDays(-5),
                 VehicleSpeed = 80,
-                CalculatedFee = 0.0m,
+                CalculatedFee = 0.0m
             };
 
             var violation1 = new TrafficViolation
@@ -110,8 +112,6 @@ namespace HighwayTollsystem.Tests.Integration
                 ViolationType = ViolationTypeCode.Speeding,
                 Details = $"Limit: 130, speed recorded: {10}",
                 ActualPenaltyAmount = 1000.0m
-
-
             };
 
             context.Vehicles.AddRange(vehicle1, vehicle2);
@@ -119,10 +119,8 @@ namespace HighwayTollsystem.Tests.Integration
             context.Passages.AddRange(passage1, passage2);
             context.TrafficViolations.Add(violation1);
 
-
             await context.SaveChangesAsync();
         }
-
 
         [Fact]
         public async Task GetDashboard_ReturnsOkAndCorrectData()
@@ -132,9 +130,8 @@ namespace HighwayTollsystem.Tests.Integration
             var res = await _client.GetAsync("/api/analytics/dashboard");
 
             res.StatusCode.Should().Be(HttpStatusCode.OK);
-            var dashboard = await res.Content.ReadFromJsonAsync<AnalyticsDashboardDto>();
+            var dashboard = await res.Content.ReadFromJsonAsync<AnalyticsDashboardDto>(JsonOptions);
             dashboard.Should().NotBeNull();
-
         }
 
         [Fact]
@@ -143,7 +140,7 @@ namespace HighwayTollsystem.Tests.Integration
             await ResetDbAsync();
             var res = await _client.GetAsync("/api/analytics/top-gates?count=5");
             res.StatusCode.Should().Be(HttpStatusCode.OK);
-            var topGates = await res.Content.ReadFromJsonAsync<List<AnalyticsGateStatsDto>>();
+            var topGates = await res.Content.ReadFromJsonAsync<List<AnalyticsGateStatsDto>>(JsonOptions);
             topGates.Should().NotBeNull();
             topGates.Should().NotBeEmpty();
         }
@@ -154,7 +151,7 @@ namespace HighwayTollsystem.Tests.Integration
             await ResetDbAsync();
             var res = await _client.GetAsync("/api/analytics/breakdown-violations");
             res.StatusCode.Should().Be(HttpStatusCode.OK);
-            var breakdown = await res.Content.ReadFromJsonAsync<List<AnalyticsViolationsStatsDto>>();
+            var breakdown = await res.Content.ReadFromJsonAsync<List<AnalyticsViolationsStatsDto>>(JsonOptions);
             breakdown.Should().NotBeNull();
             breakdown.Should().NotBeEmpty();
         }
@@ -168,5 +165,3 @@ namespace HighwayTollsystem.Tests.Integration
         }
     }
 }
-
-
