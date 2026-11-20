@@ -32,7 +32,7 @@ namespace HighwayTollsystem.Data
             if (await db.Vehicles.AnyAsync()) return;
 
 
-
+            var usedSpz = new HashSet<string>();
             var vehicles = new List<Vehicle>();
             var vehicleTypes = Enum.GetValues<VehicleType>().ToList();
             var countryCodes = new List<string> { "CZ", "CZ", "CZ", "CZ", "CZ", "CZ", "CZ", "CZ", "CZ", "DE", "AT", "SK", "PL" };
@@ -46,7 +46,11 @@ namespace HighwayTollsystem.Data
                 var emissionClass = fuelType == FuelType.Electric ? EmissionClass.EV : GetEmissionClassForYear(registeredAt.Year);
 
                 var countryCode = countryCodes[Random.Shared.Next(countryCodes.Count)];
-                var spz = GenerateSpzForCountry(countryCode);
+                string spz;
+                do
+                {
+                    spz = GenerateSpzForCountry(countryCode);
+                } while (!usedSpz.Add(spz));
 
                 vehicles.Add(new Vehicle
                 {

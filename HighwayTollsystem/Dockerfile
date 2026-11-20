@@ -8,9 +8,6 @@ COPY ["HighwayTollsystem/HighwayTollsystem.csproj", "HighwayTollsystem/"]
 RUN dotnet restore "HighwayTollsystem/HighwayTollsystem.csproj"
 COPY . .
 WORKDIR "/src/HighwayTollsystem"
-RUN dotnet build "HighwayTollsystem.csproj" -c Release -o /app/build
-
-FROM build AS publish
 RUN dotnet publish "HighwayTollsystem.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final

@@ -67,6 +67,7 @@ namespace HighwayTollsystem.Services
                     {
                         _logger.LogWarning("Passage processing returned null for GateId={GateId}, SPZ={SPZ}, Speed={Speed}",
                             selectedGateid, selectedSpz, vehicleSpeed);
+                        await Task.Delay(TimeSpan.FromSeconds(generatingDelay), stoppingToken);
                         continue;
                     }
 
