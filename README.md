@@ -29,11 +29,11 @@
 
 ```mermaid
 flowchart LR
-    Gate[Toll Gate / Simulator] -->|POST /api/toll| API[ASP.NET Core API]
-    API --> Val[FluentValidation]
-    Val --> Svc[Domain Services]
-    Svc --> DB[(PostgreSQL)]
-    Client[Client / Swagger] -->|GET /api/analytics & vehicle| API
+    Gate["Toll Gate / Simulator"] -->|"POST /api/Toll"| API["ASP.NET Core API"]
+    API --> Val["FluentValidation"]
+    Val --> Svc["Domain Services"]
+    Svc --> DB[("PostgreSQL")]
+    Client["Client / Swagger"] -->|"GET /api/Analytics, /api/Vehicle"| API
 ```
 
 ## How to Run the App
